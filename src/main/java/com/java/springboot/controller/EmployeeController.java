@@ -1,6 +1,11 @@
 package com.java.springboot.controller;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.java.springboot.exceptions.ResourceNotFoundException;
@@ -68,5 +74,25 @@ public class EmployeeController {
     	employeeRepository.delete(employee);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+    
+    
+    @GetMapping("/paginationAndSorting")
+    public ResponseEntity<List<Employee>> getEmployeesWithPaginationAndSorting(
+            @RequestParam(defaultValue = "0") int page,       // page number (0-based)
+            @RequestParam(defaultValue = "5") int size,       // page size
+            @RequestParam(defaultValue = "id") String sortBy, // sorting field
+            @RequestParam(defaultValue = "asc") String sortDir // asc or desc
+    ) {
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort); // ✅ correct import
+
+        Page<Employee> employeePage = employeeRepository.findAll(pageable);
+
+        return ResponseEntity.ok(employeePage.getContent());
+    }
+
     
 }
